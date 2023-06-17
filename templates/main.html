@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PromptGT</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Roboto", sans-serif;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        background-color: #f5f5f5; /* light background */
+        color: #333; /* dark text */
+      }
+
+      body.dark-mode {
+        background-color: #333; /* dark background */
+        color: #f5f5f5; /* light text */
+      }
+
+      h1 {
+        font-weight: 700;
+        font-size: 2.3rem;
+        margin-top: 30px;
+      }
+
+      button {
+        background: #888;
+        border: none;
+        color: #fff;
+        padding: 10px 20px;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 16px;
+        margin: 10px 2px;
+        transition-duration: 0.4s;
+        cursor: pointer;
+        border-radius: 5px;
+      }
+
+      button.selected {
+        background: #00ff00;
+        color: black;
+      }
+
+      textarea {
+        width: 100%;
+        padding: 10px 10px;
+        box-sizing: border-box;
+        border: 2px solid #ccc;
+        border-radius: 4px;
+        background-color: #f8f8f8;
+        resize: none;
+        font-family: Monaco, "Courier New", Consolas, monospace;
+      }
+
+      /* New styles for labels (titles) */
+      label.large-font {
+        font-size: 1.2em; /* adjust this value */
+      }
+
+      /* New styles for textareas */
+      textarea.large-font {
+        font-size: 1em; /* adjust this value */
+      }
+
+      #userInput {
+        height: 150px;
+        margin-top: 8px;
+      }
+
+      #promptOutput {
+        height: 350px;
+        margin-top: 8px;
+      }
+
+      #getPrompt {
+        background: #3498db; /* light blue */
+        color: #fff; /* white text */
+      }
+
+      #getResponse {
+        background: #3498db; /* light blue */
+        color: #fff; /* white text */
+      }
+
+      #submitToGPT35 {
+        background: #3498db; /* light blue */
+        color: #fff; /* white text */
+      }
+
+      #submitToGPT4 {
+        background: #3498db; /* light blue */
+        color: #fff; /* white text */
+      }
+
+      #modelOutput {
+        height: 500px;
+        margin-top: 8px;
+      }
+
+      .input-container,
+      .textarea-container {
+        width: 70%;
+        margin: 20px auto;
+      }
+
+      .text-field-container {
+        width: 70%;
+      }
+
+      #loading {
+        position: fixed;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        padding: 20px;
+        background-color: #333;
+        color: #fff;
+        border-radius: 10px;
+        display: none;
+      }
+
+      #categoryButtons,
+      #subcategories,
+      #subSubcategories {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+      .hidden {
+        display: none;
+      }
+      .startOver-clicked {
+        animation: flashGreen 0.2s;
+      }
+
+      @keyframes flashGreen {
+        0% {
+          background-color: #888;
+        }
+        50% {
+          background-color: #00ff00;
+        }
+        100% {
+          background-color: #888;
+        }
+      }
+    </style>
+  </head>
+  <body class="dark-mode">
+    <h1>PromptGT</h1>
+    <button id="startOver">Start Over</button>
+    <div class="input-container text-field-container">
+      <label class="large-font">Your Idea:</label>
+      <textarea
+        id="userInput"
+        class="large-font"
+        rows="2"
+        style="height: 150px"
+      ></textarea>
+    </div>
+    <div id="categoryButtons">
+      <button data-category="create">Create</button>
+      <button data-category="learn">Learn</button>
+      <button data-category="explore">Explore</button>
+    </div>
+    <div id="subcategories"></div>
+    <div id="subSubcategories"></div>
+    <button id="getPrompt">Get Prompt</button>
+    <button id="getResponse">Get Response</button>
+    <div id="loading" class="hidden">Creating...</div>
+
+    <!-- Hidden sections -->
+    <div class="text-field-container hidden">
+      <label>Prompt GT Output:</label>
+      <textarea id="promptGTOutput" rows="5" cols="50"></textarea>
+    </div>
+    <div class="hidden">
+      <button id="submitToGPT35GT">Submit to GPT 3.5</button>
+      <button id="submitToGPT4GT">Submit to GPT-4</button>
+    </div>
+    <!-- End of hidden sections -->
+
+    <div class="text-field-container">
+      <label class="large-font">Prompt Output:</label>
+      <textarea
+        id="promptOutput"
+        class="large-font"
+        style="height: 350px"
+      ></textarea>
+    </div>
+    <div>
+      <button id="copy">Copy Prompt Output</button>
+      <button id="generateNewPrompt">Generate New Prompt</button>
+    </div>
+    <div>
+      <button id="submitToGPT35">Submit to GPT 3.5</button>
+      <button id="submitToGPT4">Submit to GPT-4</button>
+    </div>
+    <div class="text-field-container">
+      <label class="large-font">Model Output:</label>
+      <textarea
+        id="modelOutput"
+        class="large-font"
+        style="height: 500px"
+      ></textarea>
+    </div>
+    <div>
+      <button id="continueButton">Continue this</button>
+      <button id="advancedButton">Create a more Advanced Version</button>
+      <button id="complexButton">Create a more Complex Version</button>
+      <button id="simplifyButton">Simplify This</button>
+    </div>
+    <div>
+      <button id="copyModelOutput">Copy Model Output</button>
+      <button id="toggleDarkMode">Light / Dark Mode</button>
+    </div>
+    <div>
+      <button id="copyGTOutput">Copy Prompt GT Output</button>
+    </div>
+    <script>
+      document.body.classList.add("dark-mode");
+
+      const categoryButtons = document.querySelectorAll(
+        "#categoryButtons button"
+      );
+      const subcategories = document.getElementById("subcategories");
+      const subSubcategories = document.getElementById("subSubcategories");
+
+      const getPromptButton = document.getElementById("getPrompt");
+      const getResponseButton = document.getElementById("getResponse");
+
+      const subcategoryData = {
+        create: {
+          "Creative Writing": [
+            "Story",
+            "Poetry",
+            "Script",
+            "Comedy",
+            "Tweet",
+            "Social Media Post",
+            "Tag line",
+            "Song lyrics",
+            "Screenplay",
+            "Copywriting",
+            "Marketing Content",
+            "Customer Support",
+            "Press Release",
+            "Translation",
+            "Newsletter",
+            "News Article",
+            "Speech",
+            "Essay",
+            "Article",
+            "Blog post",
+            "Presentation",
+            "Slogan",
+            "Jingle",
+            "Catchphrase",
+            "Travel Writing",
+            "Food Writing",
+            "Review",
+            "Literary Criticism",
+            "Satire",
+            "Creative non-fiction",
+            "Image Description",
+          ],
+          "Technical Writing": [
+            "Resume",
+            "Cover Letter",
+            "Business Plan",
+            "Product Description",
+            "Product Documentation",
+            "User Manual",
+            "Press Release",
+            "Grant Proposal",
+            "Grant Application",
+            "Research Paper",
+            "Case Study",
+            "Whitepaper",
+            "Recipe",
+            "API documentation",
+            "Standard Operating Procedure",
+            "Technical Manual",
+            "Technical Proposal",
+            "Technical Report",
+            "Software Documentation",
+            "Engineering Report",
+            "Training Materials",
+            "Technical Marketing Content",
+            "Medical Writing",
+            "Patent Application",
+            "Proposal",
+          ],
+          Code: [
+            "Python",
+            "Java",
+            "C++",
+            "JavaScript",
+            "HTML",
+            "CSS",
+            "Ruby",
+            "PHP",
+            "Swift",
+            "Go",
+            "Rust",
+            "TypeScript",
+            "SQL",
+            "Bash / Shell",
+            "Perl",
+            "Lua",
+            "Scala",
+            "R",
+            "Visual Basic",
+            "Dart",
+            "Lisp",
+            "Objective-C",
+            "Kotlin",
+            "MATLAB",
+            "Julia",
+            "COBOL",
+            "Fortran",
+            "Prolog",
+            "Assembly Languange",
+            "Smalltalk",
+            "Haskell",
+            "Erlang",
+            "F#",
+            "Clojure",
+            "Groovy",
+            "OCaml",
+            "Pascal",
+            "PowerShell",
+            "Scratch",
+            "Swift",
+            "VBScript",
+            "Ada",
+            "Elixir",
+          ],
+        },
+        learn: {
+          Explain: [
+            "Explain Like I'm 5",
+            "Explain in simple terms",
+            "Explain using complex terms",
+            "Explain step-by-step",
+            "Explain with pros and cons",
+            "Explain with metaphors",
+            "Explain through analogies",
+            "Explain with real-life examples",
+            "Explain with hypothetical scenarios",
+            "Explain through cause and effect",
+            "Explain with statistical data",
+            "Explain through storytelling and characters",
+            "Explain through a Q&A session",
+            "Explain through a mind map or concept map",
+            "Explain through a comparison chart",
+            "Explain through a timeline",
+            "Explain through a thought experiment",
+            "Explain through a debate or discussion",
+            "Explain through a mnemonic or acrostic",
+            "Explain using Tree of Thoughts",
+            "Explain using Tree of Thoughts 2",
+            "Explain PRO",
+          ],
+          "How To": [
+            "Tutorial",
+            "Step-by-step Guide",
+            "Troubleshooting Guide",
+            "Comparison Guide",
+            "DIY (Do-It-Yourself) Guide",
+            "Optimization Guide",
+            "Safety Guide",
+            "Quick Tips",
+            "Creative Guide",
+            "Life Hack",
+            "Cooking Recipe",
+            "Fitness Workout",
+            "Financial Planning",
+            "Language Learning",
+            "Travel Planning",
+            "Resume Writing",
+            "Car Maintenance",
+          ],
+          "Fact Check": ["Run Fact Check"],
+          Summary: [
+            "1 word",
+            "3 words",
+            "5 words",
+            "10 words",
+            "20 words",
+            "30 words",
+            "50 words",
+            "75 words",
+            "100 words",
+            "150 words",
+            "200 words",
+            "300 words",
+            "500 words",
+            "1000 words",
+            "1 sentence",
+            "2 sentences",
+            "3 sentences",
+            "1 paragraph",
+            "2 paragraphs",
+            "3 paragraphs",
+            "Summarizer Pro",
+          ],
+          Simplify: [
+            "Simplify",
+            "Simplify in 10 words",
+            "Simplify in 25 words",
+            "Simplify in 50 words",
+            "Simplify in 75 words",
+            "Simplify in 100 words",
+            "Simplify in 150 words",
+            "Simplify in 200 words",
+            "Simplify in 300 words",
+            "Simplify in 400 words",
+            "Simplify in 500 words",
+          ],
+          Critique: ["Critique", "Critique +", "Criticize"],
+        },
+        explore: {
+          Roles: [
+            "UX/UI Developer",
+            "Interviewer",
+            "Debate Coach",
+            "Career Counselor",
+            "Statistician",
+            "Software Tester",
+            "SQL Terminal",
+            "Linux Terminal",
+            "JavaScript Console",
+            "Text Based Excel",
+            "Fallacy Finder",
+            "Plagiarism Checker",
+            "Tech Writer",
+            "Note Taker",
+            "CEO",
+            "English Translator",
+            "Travel Guide",
+            "Advertiser",
+            "Stand-Up Comedian",
+            "Composer",
+            "Screenwriter",
+            "Philosopher",
+            "Cyber Security Expert",
+            "DAN",
+            "KAREN",
+            "STAR",
+            "Prompt Engineer",
+            "Super Prompt Engineer",
+            "Verbose Mode",
+            "Imitate an Expert",
+          ],
+        },
+      };
+
+      let promptsData = {};
+
+      fetch("/static/ProPrompts.json")
+        .then((response) => response.json())
+        .then((data) => (promptsData = data));
+
+      function showLoading() {
+        document.getElementById("loading").style.display = "block";
+      }
+
+      function hideLoading() {
+        document.getElementById("loading").style.display = "none";
+      }
+
+      document.getElementById("startOver").addEventListener("click", () => {
+        // clear user inputs
+        document.getElementById("userInput").value = "";
+        document.getElementById("promptGTOutput").value = "";
+        document.getElementById("promptOutput").value = "";
+        document.getElementById("modelOutput").value = "";
+
+        // clear selected buttons
+        clearSelected(document.querySelectorAll("button"));
+
+        // clear subcategories and subSubcategories
+        subcategories.innerHTML = "";
+        subSubcategories.innerHTML = "";
+      });
+
+      function updateSubcategories(category) {
+        subcategories.innerHTML = "";
+        subSubcategories.innerHTML = "";
+        Object.keys(subcategoryData[category]).forEach((sub) => {
+          const button = document.createElement("button");
+          button.textContent = sub;
+          button.classList.add("subcategory");
+          button.dataset.subcategory = sub;
+          subcategories.appendChild(button);
+        });
+        subcategories.style.display = "flex";
+        subcategories.style.justifyContent = "center";
+        subcategories.style.flexWrap = "wrap";
+      }
+
+      function updateSubSubcategories(category, subcategory) {
+        subSubcategories.innerHTML = "";
+        subcategoryData[category][subcategory].forEach((subSub) => {
+          const button = document.createElement("button");
+          button.textContent = subSub;
+          button.classList.add("subSubcategory");
+          button.dataset.subSubcategory = subSub;
+          subSubcategories.appendChild(button);
+        });
+      }
+
+      function clearSelected(buttonList) {
+        buttonList.forEach((button) => {
+          button.classList.remove("selected");
+        });
+      }
+
+      function selectButton(button) {
+        clearSelected(document.querySelectorAll("button")); // Clear all selected buttons
+        button.classList.add("selected");
+      }
+
+      const startOverButton = document.getElementById("startOver");
+      startOverButton.addEventListener("click", () => {
+        // Add the 'startOver-clicked' class to start the animation
+        startOverButton.classList.add("startOver-clicked");
+
+        // clear user inputs
+        document.getElementById("userInput").value = "";
+        document.getElementById("promptGTOutput").value = "";
+        document.getElementById("promptOutput").value = "";
+        document.getElementById("modelOutput").value = "";
+
+        // clear selected buttons
+        clearSelected(document.querySelectorAll("button"));
+
+        // clear subcategories and subSubcategories
+        subcategories.innerHTML = "";
+        subSubcategories.innerHTML = "";
+
+        // Remove the 'startOver-clicked' class after the animation has finished
+        setTimeout(() => {
+          startOverButton.classList.remove("startOver-clicked");
+        }, 500);
+      });
+
+      categoryButtons.forEach((button) => {
+        button.addEventListener("click", (e) => {
+          selectButton(e.target);
+          updateSubcategories(e.target.dataset.category);
+          if (e.target.dataset.category === "create") {
+            getPromptButton.classList.remove("hidden");
+          } else {
+            getPromptButton.classList.add("hidden");
+          }
+        });
+      });
+
+      subcategories.addEventListener("click", (e) => {
+        if (e.target.tagName === "BUTTON") {
+          clearSelected(subcategories.querySelectorAll("button"));
+          e.target.classList.add("selected");
+          const selectedCategoryButton = document.querySelector(
+            "#categoryButtons button.selected"
+          );
+          const selectedCategory = selectedCategoryButton
+            ? selectedCategoryButton.dataset.category
+            : null;
+          updateSubSubcategories(
+            selectedCategory,
+            e.target.dataset.subcategory
+          );
+        }
+      });
+
+      subSubcategories.addEventListener("click", (e) => {
+        if (e.target.tagName === "BUTTON") {
+          clearSelected(subSubcategories.querySelectorAll("button"));
+          e.target.classList.add("selected");
+        }
+      });
+
+      document.getElementById("copy").addEventListener("click", () => {
+        const promptOutput = document.getElementById("promptOutput");
+        promptOutput.select();
+        document.execCommand("copy");
+      });
+
+      document.getElementById("getPrompt").addEventListener("click", () => {
+        // Static text
+        const staticText =
+          "Your task is to create a professional prompt.  Your output to this message needs to be a professional prompt, a prompt that is descriptive and leverages a large language model to acheive the best results.  This prompt needs to be between 60 words minimum, but can be up to 300 words if needed for a more complex prompt subject.  You should use intelligent language and you should not be chatty in the prompt.  Make sure you output the full prompt you create and do not leave off any words. The prompt you create will need to be in an intelligent and logical format and include the steps clearly layed out to for a large language model to achieve the desired prompt result.  You will be presented with a user idea and a description.  The user idea is what the user is looking for, and should be top priority.  The description is a short description of what what type of output the prompt you are making will create.  Use the following information (User Idea & Description) to create a professional prompt:\n\n";
+
+        // Text from the user's idea
+        const userIdea = document.getElementById("userInput").value;
+
+        // Get selected category
+        const selectedCategoryButton = document.querySelector(
+          "#categoryButtons button.selected"
+        );
+        const selectedCategory = selectedCategoryButton
+          ? selectedCategoryButton.dataset.category
+          : null;
+
+        // Get selected subcategory
+        const selectedSubcategoryButton =
+          subcategories.querySelector("button.selected");
+        const selectedSubcategory = selectedSubcategoryButton
+          ? selectedSubcategoryButton.dataset.subcategory
+          : null;
+
+        // Get selected sub-subcategory
+        const selectedSubSubcategoryButton =
+          subSubcategories.querySelector("button.selected");
+        const selectedSubSubcategory = selectedSubSubcategoryButton
+          ? selectedSubSubcategoryButton.dataset.subSubcategory
+          : null;
+
+        // Text from JSON for the selected subcategory and sub-subcategory
+        const jsonText =
+          selectedCategory && selectedSubcategory && selectedSubSubcategory
+            ? promptsData[selectedCategory][selectedSubcategory][
+                selectedSubSubcategory
+              ]
+            : "";
+
+        // Combine all elements into one text
+        const finalPrompt =
+          staticText +
+          "User Idea: " +
+          userIdea +
+          "\n\n" +
+          "Description: " +
+          jsonText;
+
+        // Set the final prompt into the 'promptGTOutput' textarea
+        document.getElementById("promptGTOutput").value = finalPrompt;
+
+        // Send query to GPT-3.5 Turbo
+        // Send query to GPT-3.5 Turbo
+        const prompt = document.getElementById("promptGTOutput").value;
+        sendQuery(prompt, "gpt-3.5-turbo", "promptOutput");
+      });
+
+      document.getElementById("getResponse").addEventListener("click", () => {
+        // Text from the user's idea
+        const userIdea = document.getElementById("userInput").value;
+
+        // Get selected category
+        const selectedCategoryButton = document.querySelector(
+          "#categoryButtons button.selected"
+        );
+        const selectedCategory = selectedCategoryButton
+          ? selectedCategoryButton.dataset.category
+          : null;
+
+        // Get selected subcategory
+        const selectedSubcategoryButton =
+          subcategories.querySelector("button.selected");
+        const selectedSubcategory = selectedSubcategoryButton
+          ? selectedSubcategoryButton.dataset.subcategory
+          : null;
+
+        // Get selected sub-subcategory
+        const selectedSubSubcategoryButton =
+          subSubcategories.querySelector("button.selected");
+        const selectedSubSubcategory = selectedSubSubcategoryButton
+          ? selectedSubSubcategoryButton.dataset.subSubcategory
+          : null;
+
+        // Text from JSON for the selected subcategory and sub-subcategory
+        const jsonText =
+          selectedCategory && selectedSubcategory && selectedSubSubcategory
+            ? promptsData[selectedCategory][selectedSubcategory][
+                selectedSubSubcategory
+              ]
+            : "";
+
+        // Combine all elements into one text
+        const finalResponsePrompt =
+          "User Idea: " + userIdea + "\n\n" + "Description: " + jsonText;
+
+        // Set the final response prompt into the 'promptOutput' textarea
+        document.getElementById("promptOutput").value = finalResponsePrompt;
+
+        // Send query to GPT-3.5 Turbo
+        const prompt = document.getElementById("promptOutput").value;
+        sendQuery(prompt, "gpt-3.5-turbo", "modelOutput");
+      });
+
+      document.getElementById("copyGTOutput").addEventListener("click", () => {
+        const promptGTOutput = document.getElementById("promptGTOutput");
+        promptGTOutput.parentElement.style.display = "block"; // Temporarily unhide the textarea
+        promptGTOutput.select();
+        document.execCommand("copy");
+        promptGTOutput.parentElement.style.display = "none"; // Hide the textarea again
+      });
+
+      function sendQuery(prompt, model, outputField = "modelOutput") {
+        showLoading(); // Show the loading icon
+        fetch("/api/generate", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ prompt: prompt, model: model }),
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            const outputTextArea = document.getElementById(outputField);
+            outputTextArea.value += `${data.response}\n`;
+            outputTextArea.scrollTop = outputTextArea.scrollHeight;
+            hideLoading(); // Hide the loading icon
+          });
+      }
+
+      document
+        .getElementById("generateNewPrompt")
+        .addEventListener("click", () => {
+          // Clear the 'promptOutput' textarea
+          document.getElementById("promptOutput").value = "";
+
+          // Get the prompt and send query
+          const prompt = document.getElementById("promptGTOutput").value;
+          sendQuery(prompt, "gpt-3.5-turbo", "promptOutput");
+        });
+
+      document.getElementById("submitToGPT35").addEventListener("click", () => {
+        const prompt = document.getElementById("promptOutput").value;
+        sendQuery(prompt, "gpt-3.5-turbo", "modelOutput"); // Specify the output field as modelOutput
+      });
+
+      document.getElementById("submitToGPT4").addEventListener("click", () => {
+        const prompt = document.getElementById("promptOutput").value;
+        sendQuery(prompt, "gpt-4", "modelOutput"); // Specify the output field as modelOutput
+      });
+
+      document
+        .getElementById("copyModelOutput")
+        .addEventListener("click", () => {
+          const modelOutput = document.getElementById("modelOutput");
+          modelOutput.select();
+          document.execCommand("copy");
+        });
+
+      // Continue button functionality
+      document
+        .getElementById("continueButton")
+        .addEventListener("click", () => {
+          const modelOutput = document.getElementById("modelOutput").value;
+          const prompt = "\nContinue:" + modelOutput;
+          sendQuery(prompt, "gpt-3.5-turbo", "modelOutput");
+        });
+
+      // Advanced Version button functionality
+      document
+        .getElementById("advancedButton")
+        .addEventListener("click", () => {
+          const modelOutput = document.getElementById("modelOutput").value;
+          const prompt =
+            "\nCreate a more advanced version of this" + modelOutput;
+          sendQuery(prompt, "gpt-3.5-turbo", "modelOutput");
+        });
+
+      // Complex Version button functionality
+      document.getElementById("complexButton").addEventListener("click", () => {
+        const modelOutput = document.getElementById("modelOutput").value;
+        const prompt = "\nCreate a more complex version of this:" + modelOutput;
+        sendQuery(prompt, "gpt-3.5-turbo", "modelOutput");
+      });
+
+      // Simplify This button functionality
+      document
+        .getElementById("simplifyButton")
+        .addEventListener("click", () => {
+          const modelOutput = document.getElementById("modelOutput").value;
+          const prompt = "\nSimplify this:" + modelOutput;
+          sendQuery(prompt, "gpt-3.5-turbo", "modelOutput");
+        });
+
+      document
+        .getElementById("toggleDarkMode")
+        .addEventListener("click", () => {
+          document.body.classList.toggle("dark-mode");
+          if (document.body.classList.contains("dark-mode")) {
+            document.getElementById("toggleDarkMode").innerText = "Light Mode";
+          } else {
+            document.getElementById("toggleDarkMode").innerText = "Dark Mode";
+          }
+        });
+    </script>
+  </body>
+</html>
