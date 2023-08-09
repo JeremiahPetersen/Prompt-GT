@@ -4,7 +4,7 @@ This is a multi tool that generates prompts based on a user idea, generates resp
 # How to Use
 - Add your OpenAI API key in the .env file
 - Install the requirements.txt
-- Run App.py
+- Run app.py
 - Open your browser to http://localhost:5000/
 - Enjoy!
 
